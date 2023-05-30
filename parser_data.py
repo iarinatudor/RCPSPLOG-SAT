@@ -1,4 +1,5 @@
 from queue import PriorityQueue
+
 class Instance:
     def __init__(self, activities: int, horizon: int, and_constraints, or_constraints, bi_constraints, durations,
                  resource_capacity, resource_use, est, eft, lst, lft):
@@ -24,7 +25,6 @@ def transform_preds(and_constraints):
         else:
             precedences[successor] = []
             precedences[successor].append(predecessor)
-
 
     return precedences
 
@@ -90,10 +90,7 @@ def calculate_est_fst_lft(and_constraints, activities, durations):
         priority, current_task = queue.get()
         if current_task == 0:
             continue
-        print(current_task)
-        if current_task == 23:
-            print(eft[10])
-            print(eft[18])
+
         est[current_task] = max([eft[pred] for pred in predecessors[current_task]])
         eft[current_task] = est[current_task] + durations[current_task]
 
@@ -118,7 +115,6 @@ def calculate_est_fst_lft(and_constraints, activities, durations):
     print(lft)
 
     return est, eft, lst, lft
-
 
 def generate_or_constraints(k1, k2, activities, precedences):
     or_constraints = {}
@@ -179,16 +175,9 @@ def parse_file(filename, k1, k2):
     # or_constraints = generate_or_constraints(k1, k2, activities, precedences)
     or_constraints = {}
     # this should be done either or bi not at the same time
-    bi_constraints = {}  # generate_bi_constraints(k1, k2, activities, precedences)
+    bi_constraints = generate_bi_constraints(k1, k2, activities, precedences)
 
     and_constraints = precedences
-    # print(and_constraints)
-    # use critical path analysis to find upperbound
-    # latest_possible_time = 0
-    # for j in range(activities):
-    #     if lft[j] > latest_possible_time:
-    #         latest_possible_time = lft[j]
-    # horizon = latest_possible_time + 1
 
     return Instance(activities, horizon, and_constraints, or_constraints, bi_constraints, durations, resource_capacity,
                     resource_use, est, eft, lst, lft)
