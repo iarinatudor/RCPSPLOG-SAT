@@ -1,5 +1,6 @@
 import sys
 import time
+import os
 
 from pysat.formula import WCNF
 from pysat.pb import PBEnc
@@ -83,7 +84,6 @@ def wcnf_file(instance, output_file):
     #     for t in range(instance.eft[i] + 1, instance.horizon + 1, 1):
     #         wcnf.append([(i * instance.horizon + t + 1)])
 
-
     # Add the resource constraint clauses that ensure for each resource
     # at each time point, that the consumption is less than or equal to the availability
     for r in range(len(instance.resource_capacity)):
@@ -102,19 +102,29 @@ def wcnf_file(instance, output_file):
     for value in range(instance.horizon):
         wcnf.append([((instance.activities - 1) * instance.horizon + value + 1)], weight=1)
 
-    fm = FM(wcnf, verbose=0)
-    # fm.compute()  # set of hard clauses should be satisfiable
-    print(fm.compute())
-    # print(fm.model)
-    print(fm.cost)
+    # fm = FM(wcnf, verbose=0)
+    # # fm.compute()  # set of hard clauses should be satisfiable
+    # print(fm.compute())
+    # # print(fm.model)
+    # print(fm.cost)
     wcnf.to_file(output_file)
 
-if __name__ == '__main__':
-    start_time = time.time()
-    filename = sys.argv[1]
 
-    output = sys.argv[4]
-    k1 = int(sys.argv[2])
-    k2 = int(sys.argv[3])
-    wcnf_file(parse_file(filename, k1, k2), output)
-    print(time.time() - start_time)
+if __name__ == '__main__':
+
+    # # filename = sys.argv[1]
+    # j = 1
+    # for filename in os.listdir("datasets\j60"):
+    #     f = os.path.join("datasets\j60", filename)
+    #     # checking if it is a file
+    #
+    #     if os.path.isfile(f):
+    #         k1 = 1
+    #         k2_range = [1, 2, 5, 10]
+    #         for k2 in k2_range:
+    #             output_file = os.path.join("encodings\BI" + str(k2), filename)
+    #             wcnf_file(parse_file(f, k1, k2), output_file)
+    #         j += 1
+    #         print(j)
+    os.chdir('C:/Users/Iarina/PycharmProjects/RP/ResearchProject/encodings/BI2')
+    [os.rename(f, f.replace('.sm', '.wcnf')) for f in os.listdir('.') if f.endswith('.sm')]
