@@ -1,4 +1,5 @@
 from queue import PriorityQueue
+import os
 
 class Instance:
     def __init__(self, activities: int, horizon: int, and_constraints, or_constraints, bi_constraints, durations,
@@ -53,7 +54,7 @@ def compute_level_bfs(successors):
                 else:
                     level[succ] = max(level[succ], level[current_task] + 1)
                 queue.append(succ)
-    print(level)
+    # print(level)
     return level
 
 
@@ -109,10 +110,10 @@ def calculate_est_fst_lft(and_constraints, activities, durations):
         lft[current_task] = min([lst[succ] for succ in successors[current_task]])
         lst[current_task] = lft[current_task] - durations[current_task] + 1
 
-    print(est)
-    print(eft)
-    print(lst)
-    print(lft)
+    # print(est)
+    # print(eft)
+    # print(lst)
+    # print(lft)
 
     return est, eft, lst, lft
 
@@ -176,12 +177,67 @@ def parse_file(filename, k1, k2):
     or_constraints = {}
     # this should be done either or bi not at the same time
     bi_constraints = generate_bi_constraints(k1, k2, activities, precedences)
-
+    # bi_constraints = {}
     and_constraints = precedences
-
+    # print(and_constraints)
     return Instance(activities, horizon, and_constraints, or_constraints, bi_constraints, durations, resource_capacity,
                     resource_use, est, eft, lst, lft)
 
+def create_metadata(instance: Instance, filename):
+    # the key is the activity and the
+    metadata = {}
+    logical_constraints = {}
+
+    for succ, predecessor in instance.and_constraints:
+        if succ in logical_constraints.keys():
+            logical_constraints[succ] += 1
+        else:
+            logical_constraints[succ] = 1
+
+    for succ in instance.or_constraints.keys():
+        if succ in logical_constraints.keys():
+            logical_constraints[succ] += len(instance.or_constraints[succ])
+        else:
+            logical_constraints[succ] = len(instance.or_constraints[succ])
+
+    for succ in instance.bi_constraints.keys():
+        if succ in logical_constraints.keys():
+            logical_constraints[succ] += len(instance.bi_constraints[succ])
+        else:
+            logical_constraints[succ] = len(instance.bi_constraints[succ])
+
+    for i in range(instance.activities):
+        nr = 0
+        if i in logical_constraints.keys():
+            nr = logical_constraints[i]
+        metadata[i] = ['c', instance.est[i], instance.lst[i], nr]
+
+    output = os.path.join("metadata", filename)
+
+    with open(filename, "a") as file:
+        line = ' '.join(map(str, ['c', instance.activities, instance.horizon, max(instance.lft.values())])) + '\n'
+        file.write(line)
+        for values in metadata.values():
+            line = ' '.join(map(str, values)) + '\n'
+            file.write(line)
+
+    file.close()
 
 if __name__ == '__main__':
-    instance = parse_file("test", 1, 1)
+    j = 0
+    for filename in os.listdir("datasets\j30"):
+        f = os.path.join("datasets\j30", filename)
+        # checking if it is a file
+
+        if os.path.isfile(f) and j < 230 and j > 185:
+            # k1 = 1
+            # k2_range = [1, 2, 5, 10]
+            # for k2 in k2_range:
+            output_file = os.path.join("encodings\j30\BI10", filename.replace('.sm', '.wcnf'))
+            instance = parse_file(f, 1, 1)
+            create_metadata(instance, output_file)
+        j += 1
+        if j >= 230:
+            break
+
+
